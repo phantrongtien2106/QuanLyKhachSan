@@ -1,57 +1,57 @@
-package model;
+package System.model;
+
+import java.sql.Date;
 
 public class NhanVien {
     private String maNhanVien;
-    private String hoTen;
-    private String chucVu;
-    private String soDienThoai;
-    private String email;
-    private String diaChi;
-    private String matKhau;
+    private Date ngaySinh;
+    private double luong;
+    // Thêm tham chiếu đến TaiKhoan
+    private TaiKhoan taiKhoan;
 
-    public NhanVien() {
-    }
-
-    public NhanVien(String maNhanVien, String hoTen, String chucVu,
-                    String soDienThoai, String email, String diaChi) {
+    public NhanVien(String maNhanVien, Date ngaySinh, double luong) {
         this.maNhanVien = maNhanVien;
-        this.hoTen = hoTen;
-        this.chucVu = chucVu;
-        this.soDienThoai = soDienThoai;
-        this.email = email;
-        this.diaChi = diaChi;
+        this.ngaySinh = ngaySinh;
+        this.luong = luong;
     }
 
-    public NhanVien(String maNhanVien, String hoTen, String chucVu,
-                    String soDienThoai, String email, String diaChi, String matKhau) {
+    // Constructor đầy đủ với taiKhoan
+    public NhanVien(String maNhanVien, Date ngaySinh, double luong, TaiKhoan taiKhoan) {
         this.maNhanVien = maNhanVien;
-        this.hoTen = hoTen;
-        this.chucVu = chucVu;
-        this.soDienThoai = soDienThoai;
-        this.email = email;
-        this.diaChi = diaChi;
-        this.matKhau = matKhau;
+        this.ngaySinh = ngaySinh;
+        this.luong = luong;
+        this.taiKhoan = taiKhoan;
     }
 
-    // Getters and Setters
-    public String getMaNhanVien() { return maNhanVien; }
-    public void setMaNhanVien(String maNhanVien) { this.maNhanVien = maNhanVien; }
+    public String getMaNhanVien() {
+        return maNhanVien;
+    }
 
-    public String getHoTen() { return hoTen; }
-    public void setHoTen(String hoTen) { this.hoTen = hoTen; }
+    public void setMaNhanVien(String maNhanVien) {
+        this.maNhanVien = maNhanVien;
+    }
 
-    public String getChucVu() { return chucVu; }
-    public void setChucVu(String chucVu) { this.chucVu = chucVu; }
+    public Date getNgaySinh() {
+        return ngaySinh;
+    }
 
-    public String getSoDienThoai() { return soDienThoai; }
-    public void setSoDienThoai(String soDienThoai) { this.soDienThoai = soDienThoai; }
+    public void setNgaySinh(Date ngaySinh) {
+        this.ngaySinh = ngaySinh;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public double getLuong() {
+        return luong;
+    }
 
-    public String getDiaChi() { return diaChi; }
-    public void setDiaChi(String diaChi) { this.diaChi = diaChi; }
+    public void setLuong(double luong) {
+        this.luong = luong;
+    }
 
-    public String getMatKhau() { return matKhau; }
-    public void setMatKhau(String matKhau) { this.matKhau = matKhau; }
+    public TaiKhoan getTaiKhoan() {
+        return taiKhoan;
+    }
+
+    public void setTaiKhoan(TaiKhoan taiKhoan) {
+        this.taiKhoan = taiKhoan;
+    }
 }

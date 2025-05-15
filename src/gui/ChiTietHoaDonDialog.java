@@ -4,6 +4,7 @@ import bus.*;
 import model.ChiTietHoaDon;
 import model.HoaDon;
 
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
@@ -44,7 +45,7 @@ public class ChiTietHoaDonDialog extends JDialog {
     private HoaDon hoaDon;
     private ChiTietHoaDonBUS chiTietHoaDonBUS;
     private KhachHangBUS khachHangBUS;
-    private NhanVienBUS nhanVienBUS;
+    private System.bus.NhanVienBUS nhanVienBUS;
     private PhongBUS phongBUS;
     private DichVuBUS dichVuBUS;
 
