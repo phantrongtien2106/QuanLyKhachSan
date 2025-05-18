@@ -1,7 +1,6 @@
 package gui;
 
     import bus.*;
-    import com.itextpdf.text.pdf.draw.LineSeparator;
     import model.*;
 
     import javax.swing.*;
@@ -33,7 +32,12 @@ package gui;
     import java.io.FileOutputStream;
     import javax.swing.filechooser.FileNameExtensionFilter;
 
-    public class QuanLyHoaDonForm extends JFrame {
+    // Import DatePicker library
+    import com.github.lgooddatepicker.components.DatePicker;
+    import com.github.lgooddatepicker.components.DatePickerSettings;
+    import com.github.lgooddatepicker.zinternaltools.DateChangeEvent;
+
+public class QuanLyHoaDonForm extends JFrame {
         // UI Constants
         private static final Color PRIMARY_COLOR = new Color(0x4682B4);
         private static final Color ACCENT_COLOR = new Color(0x1E5189);
@@ -53,7 +57,7 @@ package gui;
         private DefaultTableModel tableModel;
         private JLabel lblTongSo, lblTongTien;
         private JComboBox<String> cboTrangThai;
-        private JSpinner spTuNgay, spDenNgay;
+        private DatePicker dpTuNgay, dpDenNgay;
         private JButton btnLoc, btnTim, btnXem, btnLamMoi, btnXuatPDF;
 
         // Business Logic
@@ -130,11 +134,13 @@ package gui;
 
             gbc.gridx = 1;
             gbc.weightx = 0.2;
-            spTuNgay = new JSpinner(new SpinnerDateModel());
-            JSpinner.DateEditor editorTuNgay = new JSpinner.DateEditor(spTuNgay, "dd/MM/yyyy");
-            spTuNgay.setEditor(editorTuNgay);
-            spTuNgay.setFont(CONTENT_FONT);
-            filterPanel.add(spTuNgay, gbc);
+            // Create DatePicker with custom settings
+            DatePickerSettings settingsTuNgay = new DatePickerSettings();
+            settingsTuNgay.setFormatForDatesCommonEra("dd/MM/yyyy");
+            settingsTuNgay.setFontValidDate(CONTENT_FONT);
+            settingsTuNgay.setColor(DatePickerSettings.DateArea.DatePickerTextValidDate, Color.BLACK);
+            dpTuNgay = new DatePicker(settingsTuNgay);
+            filterPanel.add(dpTuNgay, gbc);
 
             gbc.gridx = 2;
             gbc.weightx = 0.1;
@@ -144,11 +150,13 @@ package gui;
 
             gbc.gridx = 3;
             gbc.weightx = 0.2;
-            spDenNgay = new JSpinner(new SpinnerDateModel());
-            JSpinner.DateEditor editorDenNgay = new JSpinner.DateEditor(spDenNgay, "dd/MM/yyyy");
-            spDenNgay.setEditor(editorDenNgay);
-            spDenNgay.setFont(CONTENT_FONT);
-            filterPanel.add(spDenNgay, gbc);
+            // Create DatePicker with custom settings
+            DatePickerSettings settingsDenNgay = new DatePickerSettings();
+            settingsDenNgay.setFormatForDatesCommonEra("dd/MM/yyyy");
+            settingsDenNgay.setFontValidDate(CONTENT_FONT);
+            settingsDenNgay.setColor(DatePickerSettings.DateArea.DatePickerTextValidDate, Color.BLACK);
+            dpDenNgay = new DatePicker(settingsDenNgay);
+            filterPanel.add(dpDenNgay, gbc);
 
             gbc.gridx = 4;
             gbc.weightx = 0.1;
@@ -307,48 +315,31 @@ package gui;
 
         private void initializeDatePickers() {
             // Set default date range (last 30 days to today)
-            Date today = new Date();
-
-            // Configure date editors with proper formatting
-            JSpinner.DateEditor dateEditorTo = new JSpinner.DateEditor(spDenNgay, "dd/MM/yyyy");
-            JSpinner.DateEditor dateEditorFrom = new JSpinner.DateEditor(spTuNgay, "dd/MM/yyyy");
-
-            spDenNgay.setEditor(dateEditorTo);
-            spTuNgay.setEditor(dateEditorFrom);
+            LocalDate today = LocalDate.now();
 
             // Set current date as the end date
-            spDenNgay.setValue(today);
+            dpDenNgay.setDate(today);
 
             // Set "from date" to 30 days ago
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(today);
-            calendar.add(Calendar.DAY_OF_MONTH, -30);
-            Date fromDate = calendar.getTime();
-            spTuNgay.setValue(fromDate);
+            LocalDate fromDate = today.minusDays(30);
+            dpTuNgay.setDate(fromDate);
 
-            // Add focus listeners for better UX
-            JComponent editorFrom = spTuNgay.getEditor();
-            JComponent editorTo = spDenNgay.getEditor();
+            // Add date change listeners for validation
+            dpTuNgay.addDateChangeListener(event -> validateDateRange());
+            dpDenNgay.addDateChangeListener(event -> validateDateRange());
+        }
 
-            editorFrom.addFocusListener(new FocusAdapter() {
-                @Override
-                public void focusGained(FocusEvent e) {
-                    SwingUtilities.invokeLater(() -> {
-                        JTextField textField = dateEditorFrom.getTextField();
-                        textField.selectAll();
-                    });
+        private void validateDateRange() {
+            // Validate that the start date is not after the end date
+            if (dpTuNgay.getDate() != null && dpDenNgay.getDate() != null) {
+                if (dpTuNgay.getDate().isAfter(dpDenNgay.getDate())) {
+                    JOptionPane.showMessageDialog(this,
+                        "Ngày bắt đầu không thể sau ngày kết thúc",
+                        "Lỗi",
+                        JOptionPane.WARNING_MESSAGE);
+                    dpTuNgay.setDate(dpDenNgay.getDate().minusDays(30));
                 }
-            });
-
-            editorTo.addFocusListener(new FocusAdapter() {
-                @Override
-                public void focusGained(FocusEvent e) {
-                    SwingUtilities.invokeLater(() -> {
-                        JTextField textField = dateEditorTo.getTextField();
-                        textField.selectAll();
-                    });
-                }
-            });
+            }
         }
 
         private JButton createStyledButton(String text, String iconPath) {
@@ -548,22 +539,27 @@ package gui;
             try {
                 setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-                // Get dates from spinners
-                Date dateFrom = (Date) spTuNgay.getValue();
-                Date dateTo = (Date) spDenNgay.getValue();
+                // Get dates from DatePickers
+                LocalDate tuNgay = dpTuNgay.getDate();
+                LocalDate denNgay = dpDenNgay.getDate();
+
+                // Validate dates are selected
+                if (tuNgay == null || denNgay == null) {
+                    JOptionPane.showMessageDialog(this,
+                        "Vui lòng chọn ngày bắt đầu và ngày kết thúc",
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
 
                 // Validate date range
-                if (dateFrom.after(dateTo)) {
+                if (tuNgay.isAfter(denNgay)) {
                     JOptionPane.showMessageDialog(this,
                         "Ngày bắt đầu không thể sau ngày kết thúc",
                         "Lỗi",
                         JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-
-                // Convert to LocalDate properly
-                LocalDate tuNgay = dateFrom.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-                LocalDate denNgay = dateTo.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
                 // Format dates to ISO format string (yyyy-MM-dd)
                 String tuNgayStr = tuNgay.format(DateTimeFormatter.ISO_LOCAL_DATE);
@@ -678,7 +674,7 @@ package gui;
 
                 // Title
                 Paragraph title = new Paragraph("HÓA ĐƠN THANH TOÁN", titleFont);
-                title.setAlignment(Element.ALIGN_CENTER);
+                title.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
                 title.setSpacingAfter(20);
                 document.add(title);
 
@@ -735,19 +731,20 @@ package gui;
 
                 // Total
                 Paragraph totalLine = new Paragraph();
-                totalLine.add(new Chunk(new LineSeparator()));
+                // Add a simple line instead of LineSeparator
+                totalLine.add(new Chunk("----------------------------------------"));
                 totalLine.setSpacingBefore(10);
                 totalLine.setSpacingAfter(10);
                 document.add(totalLine);
 
                 Paragraph total = new Paragraph("Tổng tiền: " + df.format(hoaDon.getTongTien()), subTitleFont);
-                total.setAlignment(Element.ALIGN_RIGHT);
+                total.setAlignment(com.itextpdf.text.Element.ALIGN_RIGHT);
                 document.add(total);
 
                 // Footer
                 Paragraph footer = new Paragraph("Cảm ơn quý khách đã sử dụng dịch vụ!", smallFont);
                 footer.setSpacingBefore(30);
-                footer.setAlignment(Element.ALIGN_CENTER);
+                footer.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
                 document.add(footer);
             } finally {
                 if (document.isOpen()) {
@@ -779,9 +776,9 @@ package gui;
         // Helper methods for PDF creation
         private PdfPCell createHeaderCell(String text) {
     PdfPCell cell = new PdfPCell(new Phrase(text, new com.itextpdf.text.Font(com.itextpdf.text.Font.FontFamily.HELVETICA, 11, com.itextpdf.text.Font.BOLD)));
-    cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+    cell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
     cell.setBackgroundColor(new BaseColor(PRIMARY_COLOR.getRGB()));
-    cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+    cell.setVerticalAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
     cell.setPadding(5);
     cell.setBorderWidth(0.5f);
     return cell;
@@ -790,7 +787,7 @@ package gui;
         private PdfPCell createCell(String text, int alignment) {
     PdfPCell cell = new PdfPCell(new Phrase(text, new com.itextpdf.text.Font(com.itextpdf.text.Font.FontFamily.HELVETICA, 10, com.itextpdf.text.Font.NORMAL)));
     cell.setHorizontalAlignment(alignment);
-    cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+    cell.setVerticalAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
     cell.setPadding(5);
     cell.setBorderWidth(0.5f);
     return cell;

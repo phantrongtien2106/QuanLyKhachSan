@@ -1,4 +1,9 @@
 package model;
+<<<<<<< Updated upstream
+=======
+
+import java.sql.Date;
+>>>>>>> Stashed changes
 
 public class NhanVien {
     private String maNhanVien;
