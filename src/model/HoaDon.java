@@ -2,8 +2,8 @@ package model;
 
 public class HoaDon {
     private String id;                    // mã hóa đơn
-    private String ngayNhanPhong;
-    private String ngayTraPhong;
+    private String ngayNhan;
+    private String ngayTra;
     private String ngayThanhToan;
     private double tongTien;
     private String phuongThucThanhToan;
@@ -20,8 +20,8 @@ public class HoaDon {
                   double tongTien, String phuongThucThanhToan, String trangThai,
                   String maPhieu, String maHopDong) {
         this.id = id;
-        this.ngayNhanPhong = ngayNhanPhong;
-        this.ngayTraPhong = ngayTraPhong;
+        this.ngayNhan = ngayNhan;
+        this.ngayTra = ngayTra;
         this.ngayThanhToan = ngayThanhToan;
         this.tongTien = tongTien;
         this.phuongThucThanhToan = phuongThucThanhToan;
@@ -59,20 +59,20 @@ public class HoaDon {
         this.id = id;
     }
 
-    public String getNgayNhanPhong() {
-        return ngayNhanPhong;
+    public String getNgayNhan() {
+        return ngayNhan;
     }
 
-    public void setNgayNhanPhong(String ngayNhanPhong) {
-        this.ngayNhanPhong = ngayNhanPhong;
+    public void setNgayNhan(String ngayNhanPhong) {
+        this.ngayNhan = ngayNhanPhong;
     }
 
-    public String getNgayTraPhong() {
-        return ngayTraPhong;
+    public String getNgayTra() {
+        return ngayTra;
     }
 
-    public void setNgayTraPhong(String ngayTraPhong) {
-        this.ngayTraPhong = ngayTraPhong;
+    public void setNgayTra(String ngayTraPhong) {
+        this.ngayTra = ngayTraPhong;
     }
 
     public String getNgayThanhToan() {
@@ -155,8 +155,8 @@ public class HoaDon {
     public String toString() {
         return "HoaDon{" +
                 "id='" + id + '\'' +
-                ", ngayNhanPhong='" + ngayNhanPhong + '\'' +
-                ", ngayTraPhong='" + ngayTraPhong + '\'' +
+                ", ngayNhan='" + ngayNhan + '\'' +
+                ", ngayTra='" + ngayTra + '\'' +
                 ", ngayThanhToan='" + ngayThanhToan + '\'' +
                 ", tongTien=" + tongTien +
                 ", phuongThucThanhToan='" + phuongThucThanhToan + '\'' +

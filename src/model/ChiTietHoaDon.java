@@ -1,12 +1,13 @@
 package model;
 
-    public class ChiTietHoaDon {
-        private String maHoaDon;
-        private String maItem;     // Could be room ID or service ID
-        private String loaiItem;   // "phong" or "dich_vu"
-        private double donGia;
-        private int soLuong;       // For rooms, this could be days stayed
-        private double thanhTien;
+public class ChiTietHoaDon {
+    private String maHoaDon;
+    private String maItem;     // Could be room ID or service ID
+    private String loaiItem;   // "phong" or "dich_vu"
+    private double donGia;
+    private int soLuong;       // For rooms, this could be days stayed
+    private double thanhTien;
+    private String tenItem;
 
         // Constructors, getters and setters
         public ChiTietHoaDon() {}
@@ -15,6 +16,18 @@ package model;
             this.maHoaDon = maHoaDon;
             this.maItem = maItem;
             this.loaiItem = loaiItem;
+            this.donGia = donGia;
+            this.soLuong = soLuong;
+            this.thanhTien = thanhTien;
+        }
+
+        public ChiTietHoaDon(String maHoaDon, String loaiItem, String maItem, String tenItem,
+                             double donGia, int soLuong, double thanhTien) {
+            this.maHoaDon = maHoaDon;
+            this.loaiItem = loaiItem;
+            this.maItem = maItem;
+            // Lưu ý: tenItem có thể không được lưu vào DB, nhưng vẫn cần thiết lập
+            this.tenItem = tenItem;
             this.donGia = donGia;
             this.soLuong = soLuong;
             this.thanhTien = thanhTien;
@@ -46,6 +59,10 @@ package model;
             return thanhTien;
         }
 
+        public String getTenItem() {
+            return tenItem;
+        }
+
         // Setters
         public void setMaHoaDon(String maHoaDon) {
             this.maHoaDon = maHoaDon;
@@ -73,5 +90,9 @@ package model;
 
         public String getLoai() {
             return null;
+        }
+
+        public void setTenItem(String tenItem) {
+            this.tenItem = tenItem;
         }
     }
