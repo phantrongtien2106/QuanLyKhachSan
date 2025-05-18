@@ -12,7 +12,6 @@ import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.event.*;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -86,11 +85,6 @@ public class DatPhongPanel extends JPanel {
             String maKH = cbKhachHang.getSelectedItem().toString().split(" - ")[0];
             toggleFields(maKH.equals("VL001"));
         }
-
-        SwingUtilities.invokeLater(() -> {
-            loadPhongTrong();
-            System.out.println("Đã tải lại danh sách phòng trống");
-        });
     }
 
     private JPanel createFormPanel() {
@@ -339,16 +333,9 @@ public class DatPhongPanel extends JPanel {
 
     private void loadPhongTrong() {
         tableModel.setRowCount(0);
-        List<Phong> phongTrong = phongBUS.getPhongTrong();
-
-        System.out.println("Loading " + phongTrong.size() + " available rooms");
-
-        for (Phong p : phongTrong) {
+        for (Phong p : phongBUS.getPhongTrong()) {
             tableModel.addRow(new Object[]{false, p.getMaPhong(), p.getTenLoai(), p.getTinhTrang()});
         }
-
-        // Force table refresh
-        tablePhong.repaint();
     }
 
     private void handleDatPhong(ActionEvent e) {
@@ -424,66 +411,20 @@ public class DatPhongPanel extends JPanel {
             return;
         }
 
-        // Tạo phiếu đặt phòng
         PhieuDatPhong pdp = new PhieuDatPhong(maPhieu, maKH, ngayNhan, ngayTra, ghiChu, "dang_dat", ngayDat);
         if (!phieuBUS.themPhieuDatPhong(pdp)) {
             JOptionPane.showMessageDialog(this, "Không thể tạo phiếu!");
             return;
         }
 
-        // Theo dõi thành công/thất bại của từng phòng
-        List<String> phongThanhCong = new ArrayList<>();
-        List<String> phongThatBai = new ArrayList<>();
-
-        // Cập nhật chi tiết và trạng thái phòng
         for (String maPhong : danhSachPhong) {
-            try {
-                // Lấy đơn giá phòng
-                double donGia = phongBUS.getDonGiaByMaPhong(maPhong);
-
-                // Thêm chi tiết phiếu đặt phòng
-                boolean themChiTietOK = ctBUS.themChiTiet(new ChiTietPhieuDatPhong(maPhieu, maPhong, donGia));
-
-                // Cập nhật trạng thái phòng
-                boolean capNhatPhongOK = phongBUS.capNhatTinhTrangVaNguon(maPhong, "Đang đặt", "phieu");
-
-                // Kiểm tra kết quả
-                if (themChiTietOK && capNhatPhongOK) {
-                    phongThanhCong.add(maPhong);
-                    System.out.println("Đã cập nhật phòng " + maPhong + " thành Đang đặt");
-                } else {
-                    phongThatBai.add(maPhong);
-                    System.err.println("Lỗi cập nhật phòng " + maPhong +
-                        ": themChiTiet=" + themChiTietOK + ", capNhatPhong=" + capNhatPhongOK);
-                }
-            } catch (Exception ex) {
-                phongThatBai.add(maPhong);
-                System.err.println("Exception khi xử lý phòng " + maPhong + ": " + ex.getMessage());
-                ex.printStackTrace();
-            }
+            double donGia = phongBUS.getDonGiaByMaPhong(maPhong);
+            ctBUS.themChiTiet(new ChiTietPhieuDatPhong(maPhieu, maPhong, donGia));
+            phongBUS.capNhatTinhTrangVaNguon(maPhong, "Đang đặt", "phieu");
         }
 
-        // Hiển thị kết quả tổng hợp
-        if (phongThatBai.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Đặt phòng thành công!");
-        } else {
-            StringBuilder sb = new StringBuilder("Đặt phòng một phần thành công!\n\n");
-
-            if (!phongThanhCong.isEmpty()) {
-                sb.append("Phòng đã đặt thành công: ").append(String.join(", ", phongThanhCong)).append("\n\n");
-            }
-
-            sb.append("Phòng không thể cập nhật: ").append(String.join(", ", phongThatBai));
-            sb.append("\n\nVui lòng kiểm tra lại trạng thái phòng và cập nhật thủ công nếu cần.");
-
-            JOptionPane.showMessageDialog(this, sb.toString(), "Cảnh báo", JOptionPane.WARNING_MESSAGE);
-        }
-
-        // Làm mới danh sách phòng trống
-        SwingUtilities.invokeLater(() -> {
-            loadPhongTrong();
-            System.out.println("Đã làm mới danh sách phòng trống sau khi đặt phòng");
-        });
+        JOptionPane.showMessageDialog(this, "Đặt phòng thành công!");
+        loadPhongTrong();
     }
 
     private String autoGenerateMaPhieu() {

@@ -20,25 +20,10 @@ public class PhongBUS {
 
     // Lấy danh sách phòng trống
     public List<Phong> getPhongTrong() {
-        // Thêm log để debug
-        List<Phong> allPhong = phongDAO.getAllPhong();
-        System.out.println("Tổng số phòng: " + allPhong.size());
-
-        // Xử lý cẩn thận hơn với null và chuẩn hóa chuỗi
-        List<Phong> phongTrong = allPhong.stream()
-                .filter(p -> {
-                    String tinhTrang = p.getTinhTrang();
-                    if (tinhTrang != null) {
-                        tinhTrang = tinhTrang.trim();
-                        System.out.println("Phòng " + p.getMaPhong() + " - Tình trạng: '" + tinhTrang + "'");
-                        return tinhTrang.equalsIgnoreCase("Trống");
-                    }
-                    return false;
-                })
+        return phongDAO.getAllPhong()
+                .stream()
+                .filter(p -> p.getTinhTrang().equalsIgnoreCase("Trống"))
                 .collect(Collectors.toList());
-
-        System.out.println("Tổng số phòng trống: " + phongTrong.size());
-        return phongTrong;
     }
 
     // Thêm phòng mới (cần mã loại)

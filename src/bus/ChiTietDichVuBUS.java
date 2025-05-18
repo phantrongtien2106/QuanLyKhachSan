@@ -27,6 +27,11 @@ package bus;
             }
         }
 
+        // Phương thức này không cần thiết nữa vì đã sửa phương thức trên
+        // public List<ChiTietDichVu> getByMaPhieu(String maPhieu) {
+        //     return chiTietDichVuDAO.getByMaPhieu(maPhieu);
+        // }
+
         public boolean capNhatChiTietDichVu(ChiTietDichVu ctdv) {
             return chiTietDichVuDAO.update(ctdv);
         }

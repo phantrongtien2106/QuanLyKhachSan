@@ -5,13 +5,10 @@ package Panel;
     import com.github.lgooddatepicker.components.DatePicker;
     import javax.swing.*;
     import javax.swing.border.EmptyBorder;
-    import javax.swing.table.DefaultTableCellRenderer;
     import javax.swing.table.DefaultTableModel;
-    import javax.swing.table.JTableHeader;
     import java.awt.*;
     import java.awt.Font;
     import java.awt.event.ActionEvent;
-    import java.sql.Connection;
     import java.time.LocalDate;
     import java.time.temporal.ChronoUnit;
     import java.util.*;
@@ -180,7 +177,6 @@ public class HopDongPanel extends JPanel {
                 public Class<?> getColumnClass(int col) {
                     return col == 0 ? Boolean.class : String.class;
                 }
-
                 @Override
                 public boolean isCellEditable(int row, int col) {
                     return col == 0 || col == 5;
@@ -191,50 +187,19 @@ public class HopDongPanel extends JPanel {
             tablePhong.setRowHeight(25);
             tablePhong.setSelectionBackground(PRIMARY_COLOR);
             tablePhong.setSelectionForeground(TEXT_COLOR);
-            tablePhong.setBackground(Color.WHITE);
+            tablePhong.getTableHeader().setBackground(PRIMARY_COLOR);
+            tablePhong.getTableHeader().setForeground(TEXT_COLOR);
+            tablePhong.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
 
-            // Sử dụng custom header renderer
-            JTableHeader header = tablePhong.getTableHeader();
-            header.setDefaultRenderer(new DefaultTableCellRenderer() {
-                @Override
-                public Component getTableCellRendererComponent(JTable table, Object value,
-                                                            boolean isSelected, boolean hasFocus,
-                                                            int row, int column) {
-                    JLabel label = (JLabel) super.getTableCellRendererComponent(
-                            table, value, isSelected, hasFocus, row, column);
-                    label.setBackground(PRIMARY_COLOR);
-                    label.setForeground(TEXT_COLOR);
-                    label.setFont(new Font("Arial", Font.BOLD, 12));
-                    label.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 1, Color.LIGHT_GRAY));
-                    label.setHorizontalAlignment(JLabel.CENTER);
-                    return label;
-                }
-            });
+            tablePhong.getColumn("Dịch vụ").setCellRenderer(new ButtonRenderer());
+            tablePhong.getColumn("Dịch vụ").setCellEditor(new ButtonEditor(new JCheckBox()));
 
-            // Căn giữa nội dung các cột (trừ cột checkbox)
-            DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-            centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-
-            for (int i = 1; i < tablePhong.getColumnCount() - 1; i++) {
-                tablePhong.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-            }
-
-            // Thiết lập renderer và editor cho cột "Dịch vụ"
-            tablePhong.getColumnModel().getColumn(5).setCellRenderer(new ButtonRenderer());
-            tablePhong.getColumnModel().getColumn(5).setCellEditor(new ButtonEditor(new JCheckBox()));
-
-            // Điều chỉnh độ rộng cột
-            tablePhong.getColumnModel().getColumn(0).setMaxWidth(50);
-            tablePhong.getColumnModel().getColumn(5).setMaxWidth(100);
-
-            // Thêm bảng vào scrollPane và panel
             JScrollPane scrollPane = new JScrollPane(tablePhong);
-            scrollPane.setBorder(BorderFactory.createEmptyBorder());
+            scrollPane.setBorder(BorderFactory.createLineBorder(PRIMARY_COLOR));
             panel.add(scrollPane, BorderLayout.CENTER);
 
             return panel;
         }
-
 
         private JPanel createBottomPanel() {
             JPanel panel = new JPanel(new BorderLayout(PADDING, PADDING));
@@ -494,162 +459,131 @@ public class HopDongPanel extends JPanel {
             lblTienCoc.setText(String.format("%,d VND", (int)tienCoc));
         }
 
-private void handleLapHopDong(ActionEvent e) {
-    try {
-        // 1. Kiểm tra đầu vào
-        if (dateBD.getDate() == null || dateKT.getDate() == null) {
-            throw new IllegalArgumentException("Vui lòng chọn ngày bắt đầu và kết thúc!");
-        }
+        private void handleLapHopDong(ActionEvent e) {
+            if (dateBD.getDate() == null || dateKT.getDate() == null) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn ngày bắt đầu và kết thúc!");
+                return;
+            }
 
-        // Lấy thông tin từ form
-        String maKH = cbKhachHang.getSelectedItem().toString().split(" - ")[0];
-        String phuongThucThanhToan = cbPhuongThucThanhToan.getSelectedItem().toString();
-        String ghiChu = txtGhiChu.getText().trim();
-        String maHD = "HD" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+            // Get information
+            String maKH = cbKhachHang.getSelectedItem().toString().split(" - ")[0];
+            String phuongThucThanhToan = cbPhuongThucThanhToan.getSelectedItem().toString();
+            String ghiChu = txtGhiChu.getText().trim();
+            String maHD = "HD" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
-        LocalDate ngayBD = dateBD.getDate();
-        LocalDate ngayKT = dateKT.getDate();
-        String ngayLap = LocalDate.now().toString();
+            LocalDate ngayBD = dateBD.getDate();
+            LocalDate ngayKT = dateKT.getDate();
+            String ngayLap = LocalDate.now().toString();
 
-        // Tính số ngày thuê
-        int soNgay = (int) ChronoUnit.DAYS.between(ngayBD, ngayKT);
-        if (soNgay <= 0) {
-            throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu!");
-        }
+            // Calculate rental days
+            int soNgay = (int) ChronoUnit.DAYS.between(ngayBD, ngayKT);
+            if (soNgay <= 0) {
+                JOptionPane.showMessageDialog(this, "Ngày kết thúc phải sau ngày bắt đầu!");
+                return;
+            }
 
-        // 2. Xử lý danh sách phòng và dịch vụ
-        List<String> dsPhong = new ArrayList<>();
-        Map<String, List<String>> dichVuTheoPhongCopy = new HashMap<>(dichVuTheoPhong);
-        double tongTienPhong = 0;
-        double tongTienDichVu = 0;
+            // Room list
+            List<String> dsPhong = new ArrayList<>();
+            double tongTienPhong = 0;
+            double tongTienDichVu = 0;
 
-        for (int i = 0; i < model.getRowCount(); i++) {
-            Boolean chon = (Boolean) model.getValueAt(i, 0);
-            if (chon != null && chon) {
-                String maPhong = model.getValueAt(i, 1).toString();
-                dsPhong.add(maPhong);
+            for (int i = 0; i < model.getRowCount(); i++) {
+                Boolean chon = (Boolean) model.getValueAt(i, 0);
+                if (chon != null && chon) {
+                    String maPhong = model.getValueAt(i, 1).toString();
+                    dsPhong.add(maPhong);
 
-                // Lấy giá phòng
-                Object giaObj = model.getValueAt(i, 3);
-                double gia = 0;
+                    // Room price
+                    Object giaObj = model.getValueAt(i, 3);
+                    double gia = 0;
 
-                if (giaObj instanceof Double) {
-                    gia = (Double) giaObj;
-                } else if (giaObj instanceof Integer) {
-                    gia = ((Integer) giaObj).doubleValue();
-                } else if (giaObj instanceof String) {
-                    String giaStr = ((String) giaObj).replace(",", "").replace(".", "").replace("VND", "").trim();
-                    try {
-                        gia = Double.parseDouble(giaStr);
-                    } catch (NumberFormatException ex) {
-                        System.err.println("Lỗi định dạng giá: " + giaObj);
+                    if (giaObj instanceof Double) {
+                        gia = (Double) giaObj;
+                    } else if (giaObj instanceof Integer) {
+                        gia = ((Integer) giaObj).doubleValue();
+                    } else if (giaObj instanceof String) {
+                        String giaStr = ((String) giaObj).replace(",", "").replace(".", "").replace("VND", "").trim();
+                        try {
+                            gia = Double.parseDouble(giaStr);
+                        } catch (NumberFormatException ex) {
+                            System.err.println("Lỗi định dạng giá: " + giaObj);
+                        }
                     }
-                }
 
-                tongTienPhong += gia * soNgay;
+                    tongTienPhong += gia * soNgay;
 
-                // Xử lý dịch vụ
-                if (dichVuTheoPhong.containsKey(maPhong)) {
-                    for (String maDV : dichVuTheoPhong.get(maPhong)) {
-                        DichVu dv = dichVuBUS.getDichVuByMa(maDV);
-                        if (dv != null) {
-                            tongTienDichVu += dv.getGia();
+                    // Room services
+                    if (dichVuTheoPhong.containsKey(maPhong)) {
+                        for (String maDV : dichVuTheoPhong.get(maPhong)) {
+                            DichVu dv = dichVuBUS.getDichVuByMa(maDV);
+                            if (dv != null) {
+                                tongTienDichVu += dv.getGia();
+                            }
                         }
                     }
                 }
             }
-        }
 
-        // Kiểm tra số lượng phòng tối thiểu
-        if (dsPhong.size() < 4) {
-            throw new IllegalArgumentException("Hợp đồng phải thuê từ 4 phòng trở lên!");
-        }
-
-        // 3. Tính toán tổng tiền và tiền cọc
-        double tongTien = tongTienPhong + tongTienDichVu;
-        int tongTienInt = (int) tongTien;
-        int datCocInt = (int) (tongTien * 0.3);
-
-        // 4. Tạo đối tượng hợp đồng với daThanhToan = 0 (chưa thanh toán)
-        HopDong hd = new HopDong(maHD, maKH, dsPhong.size(), ngayLap,
-                ngayBD.toString(), ngayKT.toString(), soNgay,
-                0, ngayLap, ghiChu,
-                datCocInt, tongTienInt, phuongThucThanhToan, "dang_dat");
-
-        // 5. Xác nhận thông tin với người dùng
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Tổng tiền: " + String.format("%,d VND", tongTienInt) +
-                        "\nTiền đặt cọc (30%): " + String.format("%,d VND", datCocInt) +
-                        "\nPhương thức thanh toán: " + phuongThucThanhToan +
-                        "\nBạn có chắc chắn muốn lập hợp đồng này?",
-                "Xác nhận lập hợp đồng", JOptionPane.YES_NO_OPTION);
-
-        if (confirm != JOptionPane.YES_OPTION) return;
-
-        // 6. Thực hiện lưu hợp đồng trong một transaction
-        boolean success = hopDongBUS.themHopDongVaChiTiet(hd, dsPhong, dichVuTheoPhongCopy);
-
-        if (!success) {
-            throw new Exception("Không thể lưu hợp đồng và chi tiết!");
-        }
-
-        // 7. Cập nhật trạng thái thanh toán thành "đã cọc" (1)
-        boolean depositSuccess = hopDongBUS.capNhatThanhToan(maHD, datCocInt, ngayLap, 1);
-        if (!depositSuccess) {
-            JOptionPane.showMessageDialog(this,
-                    "Hợp đồng đã được tạo nhưng không thể cập nhật thông tin đặt cọc.",
-                    "Cảnh báo", JOptionPane.WARNING_MESSAGE);
-        }
-
-        // 8. Hiển thị thông báo thành công
-        JOptionPane.showMessageDialog(this,
-                "Lập hợp đồng thành công!\nMã: " + maHD +
-                        "\nTổng tiền: " + String.format("%,d VND", tongTienInt) +
-                        "\nĐã đặt cọc: " + String.format("%,d VND", datCocInt) +
-                        "\nCòn lại: " + String.format("%,d VND", tongTienInt - datCocInt),
-                "Thành công", JOptionPane.INFORMATION_MESSAGE);
-
-        // 9. Hỏi người dùng có muốn thanh toán đầy đủ ngay bây giờ không
-        int payNow = JOptionPane.showConfirmDialog(this,
-                "Bạn có muốn thanh toán đầy đủ ngay bây giờ không?\n" +
-                "Số tiền cần thanh toán: " + String.format("%,d VND", tongTienInt - datCocInt),
-                "Thanh toán đầy đủ", JOptionPane.YES_NO_OPTION);
-
-        if (payNow == JOptionPane.YES_OPTION) {
-            // Cập nhật thành "đã thanh toán đầy đủ" (2)
-            boolean paymentSuccess = hopDongBUS.capNhatThanhToanDayDu(
-                    maHD, tongTienInt - datCocInt, LocalDate.now().toString(), 2);
-
-            if (paymentSuccess) {
-                JOptionPane.showMessageDialog(this,
-                    "Đã thanh toán đầy đủ thành công!",
-                    "Thanh toán hoàn tất", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(this,
-                    "Không thể cập nhật thông tin thanh toán đầy đủ.",
-                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+            // Check for minimum 4 rooms
+            if (dsPhong.size() < 4) {
+                JOptionPane.showMessageDialog(this, "Hợp đồng phải thuê từ 4 phòng trở lên!");
+                return;
             }
+
+            double tongTien = tongTienPhong + tongTienDichVu;
+            int tongTienInt = (int) tongTien;
+            int datCocInt = (int) (tongTien * 0.3);
+
+            HopDong hd = new HopDong(maHD, maKH, dsPhong.size(), ngayLap,
+                    ngayBD.toString(), ngayKT.toString(), soNgay,
+                    1, ngayLap, ghiChu,
+                    datCocInt, tongTienInt, phuongThucThanhToan, "dang_dat");
+
+            // Confirm
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Tổng tiền: " + String.format("%,d VND", tongTienInt) +
+                            "\nTiền đặt cọc (30%): " + String.format("%,d VND", datCocInt) +
+                            "\nPhương thức thanh toán: " + phuongThucThanhToan +
+                            "\nBạn có chắc chắn muốn lập hợp đồng này?",
+                    "Xác nhận lập hợp đồng", JOptionPane.YES_NO_OPTION);
+
+            if (confirm != JOptionPane.YES_OPTION) return;
+
+            // Create contract
+            boolean success = hopDongBUS.themHopDong(hd);
+            if (!success) {
+                JOptionPane.showMessageDialog(this, "Không thể lưu hợp đồng!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Save contract details & update room status
+            for (String maPhong : dsPhong) {
+                ctBUS.themChiTiet(new ChiTietHopDong(maHD, maPhong));
+                phongBUS.capNhatTinhTrangVaNguon(maPhong, "Đang đặt", "hop_dong");
+
+                // Additional services
+                if (dichVuTheoPhong.containsKey(maPhong)) {
+                    for (String maDV : dichVuTheoPhong.get(maPhong)) {
+                        dvBUS.themChiTiet(new ChiTietDichVuHopDong(maHD, maPhong, maDV));
+                    }
+                }
+            }
+
+            // Success message
+            JOptionPane.showMessageDialog(this,
+                    "Lập hợp đồng thành công!\nMã: " + maHD +
+                            "\nTổng tiền: " + String.format("%,d VND", tongTienInt) +
+                            "\nĐặt cọc: " + String.format("%,d VND", datCocInt),
+                    "Thành công", JOptionPane.INFORMATION_MESSAGE);
+
+            // Reset form
+            txtGhiChu.setText("");
+            dichVuTheoPhong.clear();
+            loadPhong();
+            tinhTongTien();
         }
 
-        // 10. Xóa form, làm mới dữ liệu
-        txtGhiChu.setText("");
-        dichVuTheoPhong.clear();
-        loadPhong();
-        tinhTongTien();
-
-    } catch (IllegalArgumentException ex) {
-        JOptionPane.showMessageDialog(this,
-                "Lỗi dữ liệu: " + ex.getMessage(),
-                "Lỗi", JOptionPane.ERROR_MESSAGE);
-    } catch (Exception ex) {
-        JOptionPane.showMessageDialog(this,
-                "Đã xảy ra lỗi không mong muốn: " + ex.getMessage() +
-                        "\nVui lòng liên hệ quản trị viên.",
-                "Lỗi hệ thống", JOptionPane.ERROR_MESSAGE);
-        ex.printStackTrace();
-    }
-}
-// Inner class for button renderer in table
+        // Inner class for button renderer in table
         class ButtonRenderer extends JButton implements javax.swing.table.TableCellRenderer {
             public ButtonRenderer() {
                 setText("Chọn");

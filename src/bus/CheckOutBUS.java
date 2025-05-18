@@ -208,7 +208,7 @@ package bus;
                  }
 
                  // Tính tiền phòng
-                 double tienPhong = tinhTienPhong(maPhieu, hoaDon.getNgayNhan(), hoaDon.getNgayTra());
+                 double tienPhong = tinhTienPhong(maPhieu, hoaDon.getNgayNhanPhong(), hoaDon.getNgayTraPhong());
 
                  // Tính tiền dịch vụ
                  double tienDichVu = tinhTienDichVu(maPhieu);

@@ -1,16 +1,13 @@
 package bus;
 
     import dao.ChiTietHopDongDAO;
-    import model.ChiTietDichVuHopDong;
     import model.ChiTietHopDong;
-    import model.DichVu;
 
-    import java.util.HashMap;
     import java.util.List;
-    import java.util.Map;
 
-public class ChiTietHopDongBUS {
+    public class ChiTietHopDongBUS {
         private ChiTietHopDongDAO dao = new ChiTietHopDongDAO();
+
         // ✅ Thêm chi tiết hợp đồng cho từng phòng
         public boolean themChiTiet(ChiTietHopDong ct) {
             return dao.insert(ct);
@@ -44,4 +41,7 @@ public class ChiTietHopDongBUS {
         public List<String> getPhongByMaHopDong(String maHopDong) {
             return dao.getPhongByMaHopDong(maHopDong);
         }
+
+
+
     }
