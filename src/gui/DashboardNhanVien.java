@@ -23,7 +23,7 @@ package gui;
                     private static final Color PRIMARY_COLOR = new Color(0x4682B4);    // Steel Blue
                     private static final Color BACKGROUND_COLOR = new Color(0xF5F5F5); // Light gray
                     private static final Color TEXT_COLOR = Color.WHITE;
-                    private static final Color MENU_BG_COLOR = new Color(0x2C3E50);    // Dark blue-gray
+                    private static final Color MENU_BG_COLOR = new Color(0xDFF6FF);    // Dark blue-gray
 
                     // Panels
                     private JPanel contentPanel;

@@ -3,9 +3,6 @@ package gui;
 
 import bus.TaiKhoanBUS;
 import model.TaiKhoan;
-import gui.AdminDashboard;
-import gui.UserDashboard;
-import gui.Register;
 
 import javax.swing.*;
 import java.awt.*;
@@ -95,7 +92,7 @@ public class Login extends JFrame implements ActionListener {
             } else if (taiKhoanBUS.coVaiTro(maNguoiDung, "RECEPTIONIST")) {
                 new DashboardNhanVien();
             } else {
-                new UserDashboard(maNguoiDung);
+                // tạo ở đây nè
             }
             this.dispose();
         } else {
