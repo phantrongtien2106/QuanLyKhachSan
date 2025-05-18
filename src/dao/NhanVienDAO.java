@@ -7,9 +7,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import model.NhanVien;
-import util.DBConnection;
-import java.sql.*;
+import java.util.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,8 +37,10 @@ public class NhanVienDAO {
         }
 
         return danhSachNhanVien;
+    }
+
     public NhanVienDAO() {
-        dbConnection = (DBConnection) DBConnection.getConnection();
+        // Không cần khởi tạo gì trong constructor
     }
 
     public NhanVien getByMa(String maNhanVien) {

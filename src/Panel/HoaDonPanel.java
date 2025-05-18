@@ -315,38 +315,54 @@ public class HoaDonPanel extends JPanel {
     }
 
     private JPanel createServicePanel() {
-        JPanel servicePanel = new JPanel(new BorderLayout());
-        servicePanel.setBackground(PANEL_COLOR);
-        servicePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(PANEL_COLOR);
 
-        // Create table model
-        String[] columns = {"STT", "Mã dịch vụ", "Tên dịch vụ", "Đơn giá (VND)", "Số lượng", "Thành tiền (VND)"};
+        // Create table model with columns
+        String[] columns = {"STT", "Mã DV", "Tên dịch vụ", "Đơn giá", "Số lượng", "Thành tiền"};
         modelDichVu = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Make table read-only
+                return false;
             }
         };
 
         // Create table
         tableDichVu = new JTable(modelDichVu);
-        setupTable(tableDichVu);
-
+        tableDichVu.setFont(CONTENT_FONT);
+        tableDichVu.setRowHeight(25);
+        tableDichVu.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tableDichVu.setGridColor(new Color(0xE0E0E0));
+        
         // Set column widths
-        TableColumnModel tcm = tableDichVu.getColumnModel();
-        tcm.getColumn(0).setPreferredWidth(50);     // STT
-        tcm.getColumn(1).setPreferredWidth(100);    // Mã dịch vụ
-        tcm.getColumn(2).setPreferredWidth(200);    // Tên dịch vụ
-        tcm.getColumn(3).setPreferredWidth(150);    // Đơn giá
-        tcm.getColumn(4).setPreferredWidth(80);     // Số lượng
-        tcm.getColumn(5).setPreferredWidth(150);    // Thành tiền
+        tableDichVu.getColumnModel().getColumn(0).setPreferredWidth(50);  // STT
+        tableDichVu.getColumnModel().getColumn(1).setPreferredWidth(100); // Mã DV
+        tableDichVu.getColumnModel().getColumn(2).setPreferredWidth(250); // Tên dịch vụ
+        tableDichVu.getColumnModel().getColumn(3).setPreferredWidth(150); // Đơn giá
+        tableDichVu.getColumnModel().getColumn(4).setPreferredWidth(100); // Số lượng
+        tableDichVu.getColumnModel().getColumn(5).setPreferredWidth(150); // Thành tiền
 
-        // Create scroll pane
+        // Center align for numeric columns
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        tableDichVu.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
+        tableDichVu.getColumnModel().getColumn(4).setCellRenderer(centerRenderer);
+
+        // Right align for price columns
+        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
+        rightRenderer.setHorizontalAlignment(JLabel.RIGHT);
+        tableDichVu.getColumnModel().getColumn(3).setCellRenderer(rightRenderer);
+        tableDichVu.getColumnModel().getColumn(5).setCellRenderer(rightRenderer);
+
+        // Add table to scroll pane
         JScrollPane scrollPane = new JScrollPane(tableDichVu);
-        scrollPane.setPreferredSize(new Dimension(950, 270));
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        panel.add(scrollPane, BorderLayout.CENTER);
 
-        servicePanel.add(scrollPane, BorderLayout.CENTER);
-        return servicePanel;
+        // Debug: Kiểm tra xem bảng dịch vụ đã được khởi tạo đúng chưa
+        System.out.println("Bảng dịch vụ đã được khởi tạo với " + modelDichVu.getColumnCount() + " cột");
+
+        return panel;
     }
 
     private JPanel createTotalsPanel() {
@@ -570,20 +586,28 @@ public class HoaDonPanel extends JPanel {
 
             // ✅ 3. Gọi luôn hàm nạp chi tiết phòng + dịch vụ
             // Load room details
+            System.out.println("Bắt đầu tải thông tin chi tiết...");
             if (isHopDong) {
+                System.out.println("Đang tải thông tin hợp đồng: " + maPhieuHoacHD);
                 loadHopDongDetails();
             } else {
+                System.out.println("Đang tải thông tin phiếu đặt phòng: " + maPhieuHoacHD);
                 loadPhieuDetails();
             }
 
             // Then load service details - this is important!
+            System.out.println("Đang tải thông tin dịch vụ...");
             loadServiceDetails();
 
             // Update totals display
+            System.out.println("Cập nhật tổng tiền...");
             capNhatTongTien();
-
+            
+            System.out.println("Đã hoàn tất tải dữ liệu hóa đơn");
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi khi tải dữ liệu: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Lỗi khi tải dữ liệu: " + e.getMessage(),
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
     }
@@ -733,91 +757,118 @@ public class HoaDonPanel extends JPanel {
 
     // Thêm phương thức tải chi tiết dịch vụ
     private void loadServiceDetails() {
-    try {
-        // Xóa dữ liệu cũ
-        modelDichVu.setRowCount(0);
+        try {
+            // Xóa dữ liệu cũ
+            modelDichVu.setRowCount(0);
 
-        double tongTienDichVu = 0;
-        int stt = 1;
+            double tongTienDichVu = 0;
+            int stt = 1;
 
-        if (isHopDong) {
-            // ===== XỬ LÝ DỊCH VỤ CHO HỢP ĐỒNG =====
-            System.out.println("Đang tải dịch vụ cho hợp đồng: " + maPhieuHoacHD);
+            if (isHopDong) {
+                // ===== XỬ LÝ DỊCH VỤ CHO HỢP ĐỒNG =====
+                System.out.println("Đang tải dịch vụ cho hợp đồng: " + maPhieuHoacHD);
 
-            // Lấy danh sách phòng từ hợp đồng
-            List<String> dsPhong = cthdBUS.getPhongByMaHopDong(maPhieuHoacHD);
-            ChiTietDichVuHopDongBUS ctdvHopDongBUS = new ChiTietDichVuHopDongBUS();
-
-            // Duyệt qua từng phòng để lấy dịch vụ
-            for (String maPhong : dsPhong) {
-                List<ChiTietDichVuHopDong> dichVuTheoPhong =
-                    ctdvHopDongBUS.getDichVuTheoPhong(maPhieuHoacHD, maPhong);
-
-                if (dichVuTheoPhong == null || dichVuTheoPhong.isEmpty()) {
-                    continue;
+                // Lấy danh sách phòng từ hợp đồng
+                List<String> dsPhong = cthdBUS.getPhongByMaHopDong(maPhieuHoacHD);
+                if (dsPhong == null || dsPhong.isEmpty()) {
+                    System.out.println("Không tìm thấy phòng nào cho hợp đồng: " + maPhieuHoacHD);
+                    return;
                 }
+                
+                ChiTietDichVuHopDongBUS ctdvHopDongBUS = new ChiTietDichVuHopDongBUS();
 
-                for (ChiTietDichVuHopDong ctdv : dichVuTheoPhong) {
-                    // Lấy thông tin dịch vụ
-                    DichVu dichVu = dichVuBUS.getDichVuByMa(ctdv.getMaDv());
-                    if (dichVu == null) continue;
+                // Duyệt qua từng phòng để lấy dịch vụ
+                for (String maPhong : dsPhong) {
+                    System.out.println("Đang kiểm tra dịch vụ cho phòng: " + maPhong);
+                    
+                    List<ChiTietDichVuHopDong> dichVuTheoPhong =
+                        ctdvHopDongBUS.getDichVuTheoPhong(maPhieuHoacHD, maPhong);
 
-                    // Mặc định số lượng là 1 cho dịch vụ hợp đồng
-                    int soLuong = 1;
-                    double donGia = dichVu.getGia();
-                    double thanhTien = donGia * soLuong;
-                    tongTienDichVu += thanhTien;
+                    if (dichVuTheoPhong == null || dichVuTheoPhong.isEmpty()) {
+                        System.out.println("Không có dịch vụ cho phòng: " + maPhong);
+                        continue;
+                    }
 
-                    modelDichVu.addRow(new Object[]{
-                            stt++,
-                            dichVu.getMaDv(),
-                            dichVu.getTenDv(),
-                            String.format("%,.0f VND", donGia),
-                            soLuong,
-                            String.format("%,.0f VND", thanhTien)
-                    });
+                    System.out.println("Tìm thấy " + dichVuTheoPhong.size() + " dịch vụ cho phòng " + maPhong);
+                    
+                    for (ChiTietDichVuHopDong ctdv : dichVuTheoPhong) {
+                        // Lấy thông tin dịch vụ
+                        DichVu dichVu = dichVuBUS.getDichVuByMa(ctdv.getMaDv());
+                        if (dichVu == null) {
+                            System.out.println("Không tìm thấy thông tin dịch vụ: " + ctdv.getMaDv());
+                            continue;
+                        }
+
+                        // Mặc định số lượng là 1 cho dịch vụ hợp đồng
+                        int soLuong = 1;
+                        double donGia = dichVu.getGia();
+                        double thanhTien = donGia * soLuong;
+                        tongTienDichVu += thanhTien;
+
+                        System.out.println("Thêm dịch vụ: " + dichVu.getMaDv() + " - " + dichVu.getTenDv());
+                        
+                        modelDichVu.addRow(new Object[]{
+                                stt++,
+                                dichVu.getMaDv(),
+                                dichVu.getTenDv(),
+                                String.format("%,.0f VND", donGia),
+                                soLuong,
+                                String.format("%,.0f VND", thanhTien)
+                        });
+                    }
+                }
+            } else {
+                // ===== XỬ LÝ DỊCH VỤ CHO PHIẾU ĐẶT PHÒNG =====
+                System.out.println("Đang tải dịch vụ cho phiếu đặt: " + maPhieuHoacHD);
+
+                List<ChiTietDichVu> dsDichVu = ctdvBUS.getDichVuByMaPhieu(maPhieuHoacHD);
+                
+                if (dsDichVu == null) {
+                    System.out.println("Danh sách dịch vụ là null");
+                    return;
+                }
+                
+                System.out.println("Tìm thấy " + dsDichVu.size() + " dịch vụ cho phiếu " + maPhieuHoacHD);
+
+                if (!dsDichVu.isEmpty()) {
+                    for (ChiTietDichVu ctdv : dsDichVu) {
+                        DichVu dichVu = dichVuBUS.getDichVuByMa(ctdv.getMaDv());
+                        if (dichVu == null) {
+                            System.out.println("Không tìm thấy thông tin dịch vụ: " + ctdv.getMaDv());
+                            continue;
+                        }
+
+                        int soLuong = ctdv.getSoLuong();
+                        double donGia = dichVu.getGia();
+                        double thanhTien = donGia * soLuong;
+                        tongTienDichVu += thanhTien;
+
+                        System.out.println("Thêm dịch vụ: " + dichVu.getMaDv() + " - " + dichVu.getTenDv() + " x" + soLuong);
+                        
+                        modelDichVu.addRow(new Object[]{
+                                stt++,
+                                dichVu.getMaDv(),
+                                dichVu.getTenDv(),
+                                String.format("%,.0f VND", donGia),
+                                soLuong,
+                                String.format("%,.0f VND", thanhTien)
+                        });
+                    }
                 }
             }
-        } else {
-            // ===== XỬ LÝ DỊCH VỤ CHO PHIẾU ĐẶT PHÒNG =====
-            System.out.println("Đang tải dịch vụ cho phiếu đặt: " + maPhieuHoacHD);
 
-            List<ChiTietDichVu> dsDichVu = ctdvBUS.getDichVuByMaPhieu(maPhieuHoacHD);
+            // Cập nhật tổng tiền bao gồm dịch vụ
+            tongTien += tongTienDichVu;
+            capNhatTongTien();
 
-            if (dsDichVu != null && !dsDichVu.isEmpty()) {
-                for (ChiTietDichVu ctdv : dsDichVu) {
-                    DichVu dichVu = dichVuBUS.getDichVuByMa(ctdv.getMaDv());
-                    if (dichVu == null) continue;
-
-                    int soLuong = ctdv.getSoLuong();
-                    double donGia = dichVu.getGia();
-                    double thanhTien = donGia * soLuong;
-                    tongTienDichVu += thanhTien;
-
-                    modelDichVu.addRow(new Object[]{
-                            stt++,
-                            dichVu.getMaDv(),
-                            dichVu.getTenDv(),
-                            String.format("%,.0f VND", donGia),
-                            soLuong,
-                            String.format("%,.0f VND", thanhTien)
-                    });
-                }
-            }
+            System.out.println("Đã tải " + (stt-1) + " dịch vụ với tổng số tiền: " + tongTienDichVu);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Lỗi khi tải dịch vụ: " + e.getMessage(),
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
-
-        // Cập nhật tổng tiền bao gồm dịch vụ
-        tongTien += tongTienDichVu;
-        capNhatTongTien();
-
-        System.out.println("Đã tải " + (stt-1) + " dịch vụ với tổng số tiền: " + tongTienDichVu);
-    } catch (Exception e) {
-        JOptionPane.showMessageDialog(this,
-                "Lỗi khi tải dịch vụ: " + e.getMessage(),
-                "Lỗi", JOptionPane.ERROR_MESSAGE);
-        e.printStackTrace();
     }
-}
 
     private void capNhatTongTien() {
         txtTongTien.setText(String.format("%,.0f VND", tongTien));
@@ -988,54 +1039,109 @@ public class HoaDonPanel extends JPanel {
 
     private boolean saveServiceDetails(String maHD, String maPhieuHoacHD, boolean isHopDong) {
         try {
+            System.out.println("Bắt đầu lưu chi tiết dịch vụ cho hóa đơn: " + maHD);
+            System.out.println("Mã phiếu/hợp đồng: " + maPhieuHoacHD + ", isHopDong: " + isHopDong);
+            
             ChiTietHoaDonBUS cthdBUS = new ChiTietHoaDonBUS();
-            DichVuBUS dichVuBUS = new DichVuBUS();
-
+            
             if (isHopDong) {
                 // Xử lý dịch vụ hợp đồng
                 List<String> dsPhong = cthdBUS.getPhongByMaHopDong(maPhieuHoacHD);
+                if (dsPhong == null || dsPhong.isEmpty()) {
+                    System.out.println("Không tìm thấy phòng nào cho hợp đồng: " + maPhieuHoacHD);
+                    return true; // Vẫn xem là thành công nếu không có phòng
+                }
+                
                 ChiTietDichVuHopDongBUS ctdvHopDongBUS = new ChiTietDichVuHopDongBUS();
+                DichVuBUS dichVuBUS = new DichVuBUS();
+                int countSuccess = 0;
 
                 for (String maPhong : dsPhong) {
                     List<ChiTietDichVuHopDong> dichVuTheoPhong =
                         ctdvHopDongBUS.getDichVuTheoPhong(maPhieuHoacHD, maPhong);
 
-                    if (dichVuTheoPhong == null || dichVuTheoPhong.isEmpty()) continue;
+                    if (dichVuTheoPhong == null || dichVuTheoPhong.isEmpty()) {
+                        System.out.println("Không có dịch vụ cho phòng: " + maPhong);
+                        continue;
+                    }
 
+                    System.out.println("Tìm thấy " + dichVuTheoPhong.size() + " dịch vụ cho phòng " + maPhong);
+                    
                     for (ChiTietDichVuHopDong ctdv : dichVuTheoPhong) {
                         DichVu dv = dichVuBUS.getDichVuByMa(ctdv.getMaDv());
-                        if (dv == null) continue;
+                        if (dv == null) {
+                            System.out.println("Không tìm thấy thông tin dịch vụ: " + ctdv.getMaDv());
+                            continue;
+                        }
 
                         // Số lượng mặc định là 1
+                        int soLuong = 1;
+                        double donGia = dv.getGia();
+                        double thanhTien = donGia * soLuong;
+                        
                         ChiTietHoaDon ctHD = new ChiTietHoaDon(
                             maHD,
+                            ctdv.getMaDv(),
                             "dich_vu",
-                            dv.getMaDv(),
-                            dv.getTenDv(),
-                            dv.getGia(),
-                            1,
-                            dv.getGia()
+                            donGia,
+                            soLuong,
+                            thanhTien
                         );
 
                         boolean result = cthdBUS.themChiTietHoaDon(ctHD);
-                        if (!result) return false;
+                        System.out.println("→ Ghi chi tiết dịch vụ hợp đồng " + ctdv.getMaDv() + ": " + result);
+                        
+                        if (result) countSuccess++;
                     }
                 }
+                
+                System.out.println("Đã lưu thành công " + countSuccess + " dịch vụ cho hợp đồng");
+                return countSuccess > 0;
             } else {
-                // Xử lý dịch vụ phiếu đặt phòng (giữ nguyên code cũ)
+                // Xử lý dịch vụ phiếu đặt phòng
                 ChiTietDichVuBUS ctdvBUS = new ChiTietDichVuBUS();
                 List<ChiTietDichVu> listDichVu = ctdvBUS.getDichVuByMaPhieu(maPhieuHoacHD);
-
-                if (listDichVu == null || listDichVu.isEmpty()) return true;
-
-                for (ChiTietDichVu ctdv : listDichVu) {
-                    // Xử lý như trước
-                    // ...
+                
+                if (listDichVu == null || listDichVu.isEmpty()) {
+                    System.out.println("Không có dịch vụ cho phiếu đặt phòng: " + maPhieuHoacHD);
+                    return true; // Không có dịch vụ, vẫn xem là thành công
                 }
+                
+                System.out.println("Tìm thấy " + listDichVu.size() + " dịch vụ cho phiếu " + maPhieuHoacHD);
+                
+                DichVuBUS dichVuBUS = new DichVuBUS();
+                int countSuccess = 0;
+                
+                for (ChiTietDichVu ctdv : listDichVu) {
+                    DichVu dv = dichVuBUS.getDichVuByMa(ctdv.getMaDv());
+                    if (dv == null) {
+                        System.out.println("Không tìm thấy thông tin dịch vụ: " + ctdv.getMaDv());
+                        continue;
+                    }
+                    
+                    double thanhTien = dv.getGia() * ctdv.getSoLuong();
+                    
+                    // Tạo chi tiết hóa đơn cho dịch vụ
+                    ChiTietHoaDon ctHD = new ChiTietHoaDon(
+                        maHD, 
+                        ctdv.getMaDv(), 
+                        "dich_vu", 
+                        dv.getGia(), 
+                        ctdv.getSoLuong(), 
+                        thanhTien
+                    );
+                    
+                    boolean result = cthdBUS.themChiTietHoaDon(ctHD);
+                    System.out.println("→ Ghi chi tiết dịch vụ phiếu " + ctdv.getMaDv() + ": " + result);
+                    
+                    if (result) countSuccess++;
+                }
+                
+                System.out.println("Đã lưu thành công " + countSuccess + " dịch vụ cho phiếu đặt phòng");
+                return countSuccess > 0;
             }
-
-            return true;
         } catch (Exception e) {
+            System.err.println("Lỗi khi lưu chi tiết dịch vụ: " + e.getMessage());
             e.printStackTrace();
             return false;
         }

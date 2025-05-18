@@ -1035,31 +1035,102 @@ public class HoaDonForm extends JFrame {
 
     private boolean saveServiceDetails(String maHD, String maPhieuHoacHD, boolean isHopDong) {
         try {
-            ChiTietDichVuBUS ctdvBUS = new ChiTietDichVuBUS();
-            List<ChiTietDichVu> listDichVu = ctdvBUS.getDichVuByMaPhieuOrHopDong(maPhieuHoacHD, isHopDong);
+            if (isHopDong) {
+                return saveContractServiceDetails(maHD, maPhieuHoacHD);
+            } else {
+                return saveTicketServiceDetails(maHD, maPhieuHoacHD);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
-            System.out.println("→ Số lượng dịch vụ: " + (listDichVu != null ? listDichVu.size() : 0));
-
-            if (listDichVu == null || listDichVu.isEmpty()) return true;
-
+    // Lưu chi tiết dịch vụ cho hợp đồng
+    private boolean saveContractServiceDetails(String maHD, String maHopDong) {
+        try {
+            // Lấy danh sách phòng từ hợp đồng
+            List<String> dsPhong = cthdBUS.getPhongByMaHopDong(maHopDong);
+            ChiTietDichVuHopDongBUS ctdvHopDongBUS = new ChiTietDichVuHopDongBUS();
             ChiTietHoaDonBUS cthdBUS = new ChiTietHoaDonBUS();
             DichVuBUS dichVuBUS = new DichVuBUS();
+            
+            // Duyệt qua từng phòng để lấy dịch vụ
+            for (String maPhong : dsPhong) {
+                List<ChiTietDichVuHopDong> dichVuTheoPhong = 
+                    ctdvHopDongBUS.getDichVuTheoPhong(maHopDong, maPhong);
+                
+                if (dichVuTheoPhong == null || dichVuTheoPhong.isEmpty()) {
+                    continue;
+                }
+                
+                // Duyệt qua từng dịch vụ của phòng
+                for (ChiTietDichVuHopDong ctdv : dichVuTheoPhong) {
+                    DichVu dv = dichVuBUS.getDichVuByMa(ctdv.getMaDv());
+                    if (dv == null) continue;
+                    
+                    // Mặc định số lượng là 1 cho dịch vụ hợp đồng
+                    int soLuong = 1;
+                    double donGia = dv.getGia();
+                    double thanhTien = donGia * soLuong;
+                    
+                    // Tạo chi tiết hóa đơn cho dịch vụ
+                    ChiTietHoaDon ctHD = new ChiTietHoaDon(
+                        maHD, 
+                        ctdv.getMaDv(), 
+                        "dich_vu", 
+                        donGia, 
+                        soLuong, 
+                        thanhTien
+                    );
+                    
+                    boolean result = cthdBUS.themChiTietHoaDon(ctHD);
+                    System.out.println("→ Ghi chi tiết dịch vụ hợp đồng " + ctdv.getMaDv() + ": " + result);
+                    
+                    if (!result) return false;
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
+    // Lưu chi tiết dịch vụ cho phiếu đặt phòng
+    private boolean saveTicketServiceDetails(String maHD, String maPhieu) {
+        try {
+            ChiTietDichVuBUS ctdvBUS = new ChiTietDichVuBUS();
+            List<ChiTietDichVu> listDichVu = ctdvBUS.getDichVuByMaPhieu(maPhieu);
+            
+            if (listDichVu == null || listDichVu.isEmpty()) {
+                return true; // Không có dịch vụ, vẫn xem là thành công
+            }
+            
+            DichVuBUS dichVuBUS = new DichVuBUS();
+            ChiTietHoaDonBUS cthdBUS = new ChiTietHoaDonBUS();
+            
             for (ChiTietDichVu ctdv : listDichVu) {
                 DichVu dv = dichVuBUS.getDichVuByMa(ctdv.getMaDv());
                 if (dv == null) continue;
-
+                
+                double thanhTien = dv.getGia() * ctdv.getSoLuong();
+                
+                // Tạo chi tiết hóa đơn cho dịch vụ
                 ChiTietHoaDon ctHD = new ChiTietHoaDon(
-                        maHD, ctdv.getMaDv(), "dich_vu",
-                        dv.getGia(), ctdv.getSoLuong(), dv.getGia() * ctdv.getSoLuong()
+                    maHD, 
+                    ctdv.getMaDv(), 
+                    "dich_vu", 
+                    dv.getGia(), 
+                    ctdv.getSoLuong(), 
+                    thanhTien
                 );
-
+                
                 boolean result = cthdBUS.themChiTietHoaDon(ctHD);
-                System.out.println("→ Ghi chi tiết dịch vụ " + ctdv.getMaDv() + ": " + result);
-
+                System.out.println("→ Ghi chi tiết dịch vụ phiếu " + ctdv.getMaDv() + ": " + result);
+                
                 if (!result) return false;
             }
-
             return true;
         } catch (Exception e) {
             e.printStackTrace();

@@ -45,7 +45,7 @@ public class ChiTietHoaDonDialog extends JDialog {
     private HoaDon hoaDon;
     private ChiTietHoaDonBUS chiTietHoaDonBUS;
     private KhachHangBUS khachHangBUS;
-    private System.bus.NhanVienBUS nhanVienBUS;
+    private NhanVienBUS nhanVienBUS;
     private PhongBUS phongBUS;
     private DichVuBUS dichVuBUS;
 

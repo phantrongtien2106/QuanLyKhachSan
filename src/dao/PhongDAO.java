@@ -1,6 +1,6 @@
 package dao;
 
-import model.Phong;
+import  model.Phong;
 import util.DBConnection;
 
 import java.sql.*;
@@ -13,15 +13,24 @@ public class PhongDAO {
     public List<Phong> getAllPhong() {
         List<Phong> dsPhong = new ArrayList<>();
         String sql = """
-    SELECT p.ma_phong, lp.ten_loai, p.tinh_trang, lp.gia
-    FROM phong p
-    JOIN loai_phong lp ON p.ma_loai = lp.ma_loai
+SELECT p.ma_phong, lp.ten_loai, p.tinh_trang, lp.gia
+FROM phong p
+JOIN loai_phong lp ON p.ma_loai = lp.ma_loai
 """;
 
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try {
+            conn = DBConnection.getConnection();
+            if (conn == null) {
+                System.err.println("Không thể kết nối đến cơ sở dữ liệu trong PhongDAO.getAllPhong()");
+                return dsPhong; // Trả về danh sách rỗng
+            }
+            
+            stmt = conn.prepareStatement(sql);
+            rs = stmt.executeQuery();
 
             while (rs.next()) {
                 String maPhong = rs.getString("ma_phong");
@@ -32,7 +41,13 @@ public class PhongDAO {
                 dsPhong.add(new Phong(maPhong, tenLoai, tinhTrang, gia));
             }
         } catch (SQLException e) {
+            System.err.println("Lỗi SQL trong PhongDAO.getAllPhong(): " + e.getMessage());
             e.printStackTrace();
+        } finally {
+            // Sử dụng các phương thức đóng kết nối từ DBConnection
+            DBConnection.closeResultSet(rs);
+            DBConnection.closeStatement(stmt);
+            DBConnection.closeConnection(conn);
         }
 
         return dsPhong;

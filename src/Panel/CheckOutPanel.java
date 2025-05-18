@@ -629,7 +629,12 @@ package Panel;
             }
 
             String maHopDong = modelHopDong.getValueAt(selectedRow, 0).toString();
-            String ngayKetThucStr = modelHopDong.getValueAt(selectedRow, 3).toString().split(" ")[0];
+            String ngayKetThucStr = lblNgayTra.getText();
+
+            if (ngayKetThucStr.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Không thể xác định ngày kết thúc hợp đồng!");
+                return;
+            }
 
             try {
                 LocalDate ngayKetThuc = LocalDate.parse(ngayKetThucStr);
@@ -691,6 +696,25 @@ package Panel;
                             "Tạo hóa đơn", JOptionPane.YES_NO_OPTION);
 
                     if (createInvoice == JOptionPane.YES_OPTION) {
+                        // Đảm bảo rằng trạng thái hợp đồng đã được cập nhật trước khi tạo hóa đơn
+                        System.out.println("Đang tạo hóa đơn cho hợp đồng: " + maHopDong);
+                        
+                        // Đảm bảo dịch vụ đã được lưu trước khi tạo hóa đơn
+                        ChiTietDichVuHopDongBUS ctdvHopDongBUS = new ChiTietDichVuHopDongBUS();
+                        List<String> dsPhong = cthdBUS.getPhongByMaHopDong(maHopDong);
+                        
+                        if (dsPhong != null && !dsPhong.isEmpty()) {
+                            for (String maPhong : dsPhong) {
+                                List<ChiTietDichVuHopDong> dichVuTheoPhong = 
+                                    ctdvHopDongBUS.getDichVuTheoPhong(maHopDong, maPhong);
+                                
+                                if (dichVuTheoPhong != null && !dichVuTheoPhong.isEmpty()) {
+                                    System.out.println("Phòng " + maPhong + " có " + 
+                                        dichVuTheoPhong.size() + " dịch vụ");
+                                }
+                            }
+                        }
+                        
                         taoHoaDon(maHopDong, true);
                     }
 
@@ -957,7 +981,52 @@ package Panel;
 
         // Create invoice
         private void taoHoaDon(String maPhieuHoacHD, boolean isHopDong) {
-            new HoaDonForm(maPhieuHoacHD, isHopDong);
+            try {
+                System.out.println("Bắt đầu tạo hóa đơn cho " + (isHopDong ? "hợp đồng" : "phiếu") + ": " + maPhieuHoacHD);
+                
+                // Kiểm tra xem hóa đơn đã tồn tại chưa
+                HoaDonBUS hoaDonBUS = new HoaDonBUS();
+                HoaDon existing = isHopDong 
+                    ? hoaDonBUS.getHoaDonByMaHopDong(maPhieuHoacHD)
+                    : hoaDonBUS.getHoaDonByMaPhieu(maPhieuHoacHD);
+                    
+                if (existing != null) {
+                    System.out.println("Hóa đơn đã tồn tại với mã: " + existing.getId());
+                    
+                    // Hiển thị hóa đơn đã tồn tại
+                    JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+                    JDialog dialog = new JDialog(parentFrame, "Hóa đơn", true);
+                    dialog.setContentPane(new HoaDonPanel(maPhieuHoacHD, isHopDong));
+                    dialog.pack();
+                    dialog.setLocationRelativeTo(null);
+                    dialog.setVisible(true);
+                    return;
+                }
+                
+                // Tạo hóa đơn mới
+                // Cập nhật trạng thái của phiếu/hợp đồng thành "đã thanh toán"
+                if (isHopDong) {
+                    boolean updated = new HopDongBUS().capNhatTrangThai(maPhieuHoacHD, "da_thanh_toan");
+                    System.out.println("Cập nhật trạng thái hợp đồng: " + updated);
+                } else {
+                    boolean updated = new PhieuDatPhongBUS().capNhatTrangThai(maPhieuHoacHD, "da_thanh_toan");
+                    System.out.println("Cập nhật trạng thái phiếu: " + updated);
+                }
+                
+                // Hiển thị form hóa đơn
+                JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+                JDialog dialog = new JDialog(parentFrame, "Hóa đơn", true);
+                dialog.setContentPane(new HoaDonPanel(maPhieuHoacHD, isHopDong));
+                dialog.pack();
+                dialog.setLocationRelativeTo(null);
+                dialog.setVisible(true);
+                
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this,
+                        "Lỗi khi tạo hóa đơn: " + e.getMessage(),
+                        "Lỗi", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
         }
 
         // Display service details

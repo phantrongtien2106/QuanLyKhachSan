@@ -10,5 +10,7 @@
     <orderEntry type="library" name="LGoodDatePicker-11.2.1" level="project" />
     <orderEntry type="library" name="mysql-connector-j-9.3.1" level="project" />
     <orderEntry type="library" name="itextpdf-5.5.13.4" level="project" />
+    <orderEntry type="library" name="itextpdf-5.5.4 (2)" level="project" />
+    <orderEntry type="library" name="mysql-connector-j-8.0.33 (3)" level="project" />
   </component>
 </module>

@@ -1,9 +1,5 @@
 package model;
-<<<<<<< Updated upstream
-=======
-
 import java.sql.Date;
->>>>>>> Stashed changes
 
 public class NhanVien {
     private String maNhanVien;
@@ -13,6 +9,9 @@ public class NhanVien {
     private String email;
     private String diaChi;
     private String matKhau;
+    private Date ngaySinh;
+    private double luong;
+    private TaiKhoan taiKhoan; // Thêm thuộc tính taiKhoan
 
     public NhanVien() {
     }
@@ -38,7 +37,41 @@ public class NhanVien {
         this.matKhau = matKhau;
     }
 
-    // Getters and Setters
+    // Constructor mới cho ngày sinh và lương
+    public NhanVien(String maNhanVien, Date ngaySinh, double luong) {
+        this.maNhanVien = maNhanVien;
+        this.ngaySinh = ngaySinh;
+        this.luong = luong;
+    }
+
+    // Getters and Setters cho ngaySinh và luong
+    public Date getNgaySinh() { return ngaySinh; }
+    public void setNgaySinh(Date ngaySinh) { this.ngaySinh = ngaySinh; }
+
+    public double getLuong() { return luong; }
+    public void setLuong(double luong) { this.luong = luong; }
+
+    // Getter và Setter cho taiKhoan
+    public TaiKhoan getTaiKhoan() { return taiKhoan; }
+    
+    /**
+     * Thiết lập tài khoản cho nhân viên
+     * @param taiKhoan Đối tượng TaiKhoan cần gán cho nhân viên
+     */
+    public void setTaiKhoan(TaiKhoan taiKhoan) {
+        this.taiKhoan = taiKhoan;
+        
+        // Đồng bộ thông tin cơ bản từ tài khoản sang nhân viên
+        if (taiKhoan != null) {
+            this.maNhanVien = taiKhoan.getMaNguoiDung();
+            this.hoTen = taiKhoan.getHoTen();
+            this.soDienThoai = taiKhoan.getSoDienThoai();
+            this.email = taiKhoan.getEmail();
+            this.diaChi = taiKhoan.getDiaChi();
+        }
+    }
+
+    // Các getters và setters khác giữ nguyên
     public String getMaNhanVien() { return maNhanVien; }
     public void setMaNhanVien(String maNhanVien) { this.maNhanVien = maNhanVien; }
 

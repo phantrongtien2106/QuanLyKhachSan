@@ -196,7 +196,7 @@ public class QuanLyNhanVienPanel extends JPanel {
             String maNguoiDung = tk.getMaNguoiDung();
             // Kiểm tra xem có phải là nhân viên không
             if (maNguoiDung.startsWith("NV")) {
-                NhanVien nv = nhanVienDAO.timNhanVienTheoMa(maNguoiDung);
+                NhanVien nv = nhanVienDAO.getByMa(maNguoiDung);
                 if (nv != null) {
                     String loaiNguoiDung = taiKhoanBUS.getLoaiNguoiDung(maNguoiDung);
                     tableModel.addRow(new Object[]{
@@ -204,8 +204,6 @@ public class QuanLyNhanVienPanel extends JPanel {
                             tk.getHoTen(),
                             tk.getSoDienThoai(),
                             tk.getEmail(),
-                            nv.getNgaySinh(),
-                            nv.getLuong(),
                             loaiNguoiDung
                     });
                 }
@@ -221,7 +219,7 @@ public class QuanLyNhanVienPanel extends JPanel {
             String maNguoiDung = tk.getMaNguoiDung();
             // Chỉ hiển thị nhân viên
             if (maNguoiDung.startsWith("NV")) {
-                NhanVien nv = nhanVienDAO.timNhanVienTheoMa(maNguoiDung);
+                NhanVien nv = nhanVienDAO.getByMa(maNguoiDung);
                 if (nv != null) {
                     String loaiNguoiDung = taiKhoanBUS.getLoaiNguoiDung(maNguoiDung);
                     tableModel.addRow(new Object[]{
@@ -229,8 +227,6 @@ public class QuanLyNhanVienPanel extends JPanel {
                             tk.getHoTen(),
                             tk.getSoDienThoai(),
                             tk.getEmail(),
-                            nv.getNgaySinh(),
-                            nv.getLuong(),
                             loaiNguoiDung
                     });
                 }
@@ -242,7 +238,7 @@ public class QuanLyNhanVienPanel extends JPanel {
         String maNV = (String) tableModel.getValueAt(selectedRow, 0);
 
         TaiKhoan tk = taiKhoanBUS.layThongTinTheoMa(maNV);
-        NhanVien nv = nhanVienDAO.timNhanVienTheoMa(maNV);
+        NhanVien nv = nhanVienDAO.getByMa(maNV);
 
         if (tk != null && nv != null) {
             txtMaNguoiDung.setText(tk.getMaNguoiDung());
@@ -251,8 +247,6 @@ public class QuanLyNhanVienPanel extends JPanel {
             txtCCCD.setText(tk.getCccd());
             txtEmail.setText(tk.getEmail());
             txtDiaChi.setText(tk.getDiaChi());
-            txtLuong.setText(String.valueOf(nv.getLuong()));
-            txtNgaySinh.setText(nv.getNgaySinh().toString());
             txtMatKhau.setText(""); // Không hiển thị mật khẩu vì lý do bảo mật
 
             // Thiết lập combobox vai trò
@@ -310,8 +304,12 @@ public class QuanLyNhanVienPanel extends JPanel {
 
             NhanVien nv = new NhanVien(
                     txtMaNguoiDung.getText(),
-                    ngaySinh,
-                    luong
+                    txtHoTen.getText(),
+                    loaiVaiTro,
+                    txtSoDienThoai.getText(),
+                    txtEmail.getText(),
+                    txtDiaChi.getText(),
+                    new String(txtMatKhau.getPassword())
             );
             nv.setTaiKhoan(tk);
 
@@ -319,7 +317,7 @@ public class QuanLyNhanVienPanel extends JPanel {
 
             if (isEditing) {
                 // Cập nhật tài khoản và nhân viên
-                success = taiKhoanBUS.capNhatTaiKhoan(tk) && nhanVienBUS.capNhatNhanVien(nv);
+                success = taiKhoanBUS.capNhatTaiKhoan(tk) && nhanVienBUS.capNhat(nv);
                 if (success) {
                     JOptionPane.showMessageDialog(this, "Cập nhật nhân viên thành công");
                 } else {
@@ -336,7 +334,7 @@ public class QuanLyNhanVienPanel extends JPanel {
                 }
 
                 // Lưu tài khoản với vai trò phù hợp
-                success = taiKhoanBUS.taoTaiKhoanNhanVien(tk, loaiVaiTro) && nhanVienBUS.themNhanVien(nv);
+                success = taiKhoanBUS.taoTaiKhoanNhanVien(tk, loaiVaiTro) && nhanVienBUS.them(nv);
 
                 if (success) {
                     JOptionPane.showMessageDialog(this, "Thêm nhân viên thành công");
