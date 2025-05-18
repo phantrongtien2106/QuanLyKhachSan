@@ -330,34 +330,35 @@ public class CheckInPanel extends JPanel {
         return btn;
     }
 
-    private void setupTable(JTable table) {
+private void setupTable(JTable table) {
+        // Cài đặt cho bảng
         table.setRowHeight(25);
         table.setGridColor(Color.LIGHT_GRAY);
         table.setSelectionBackground(PRIMARY_COLOR);
         table.setSelectionForeground(TEXT_COLOR);
         table.setBackground(Color.WHITE);
 
-        // Tạo header đẹp
+        // Tạo custom renderer cho header
         JTableHeader header = table.getTableHeader();
-        header.setBackground(PRIMARY_COLOR);
-        header.setForeground(TEXT_COLOR);
-        header.setFont(new Font("Arial", Font.BOLD, 12));
+        header.setDefaultRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                                                        boolean isSelected, boolean hasFocus,
+                                                        int row, int column) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, column);
+                label.setBackground(PRIMARY_COLOR);
+                label.setForeground(TEXT_COLOR);
+                label.setFont(new Font("Arial", Font.BOLD, 12));
+                label.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 1, Color.LIGHT_GRAY));
+                label.setHorizontalAlignment(JLabel.CENTER);
+                return label;
+            }
+        });
 
-        // Chỉnh header renderer để đảm bảo màu nền và chữ
-        DefaultTableCellRenderer headerRenderer = (DefaultTableCellRenderer) table.getTableHeader().getDefaultRenderer();
-        headerRenderer.setHorizontalAlignment(JLabel.CENTER);
-        headerRenderer.setForeground(TEXT_COLOR);
-        headerRenderer.setBackground(PRIMARY_COLOR);
-
-        // Căn giữa cho tất cả các cột
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-        for (int i = 0; i < table.getColumnCount(); i++) {
-            table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-        }
-    }
-
-    private void loadPhieuChuaCheckIn() {
+        // Đảm bảo header được hiển thị
+        header.setOpaque(true);
+    }    private void loadPhieuChuaCheckIn() {
         modelPhieu.setRowCount(0);
         for (PhieuDatPhong p : pdpBUS.getPhieuChuaCheckIn()) {
             // Lấy số phòng của phiếu

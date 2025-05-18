@@ -57,5 +57,15 @@ public class ChiTietHoaDonDAO {
         return list;
     }
 
+    private String tenItem; // Thêm trường này
+
+    // Thêm getter/setter
+    public String getTenItem() {
+        return tenItem;
+    }
+
+    public void setTenItem(String tenItem) {
+        this.tenItem = tenItem;
+    }
     // Other methods like update, delete, etc.
 }

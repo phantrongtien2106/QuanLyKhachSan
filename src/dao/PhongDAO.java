@@ -116,23 +116,28 @@ public class PhongDAO {
         }
     }
 
-    public boolean capNhatTinhTrangVaNguon(String maPhong, String tinhTrang, String nguonDat) {
+public boolean capNhatTinhTrangVaNguon(String maPhong, String tinhTrang, String nguonDat) {
         String sql = "UPDATE phong SET tinh_trang = ?, nguon_dat = ? WHERE ma_phong = ?";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
+            System.out.println("Cập nhật phòng " + maPhong + ": tình trạng=" + tinhTrang + ", nguồn=" + nguonDat);
+
             stmt.setString(1, tinhTrang);
             stmt.setString(2, nguonDat);
             stmt.setString(3, maPhong);
 
-            return stmt.executeUpdate() > 0;
+            int rowsAffected = stmt.executeUpdate();
+            System.out.println("Kết quả cập nhật: " + rowsAffected + " dòng");
+
+            return rowsAffected > 0;
         } catch (SQLException e) {
+            System.err.println("Lỗi SQL khi cập nhật phòng: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
     }
-
     public double getDonGiaByMaPhong(String maPhong) {
         String sql = "SELECT gia FROM loai_phong WHERE ma_loai = ?";
         try (Connection conn = DBConnection.getConnection();
