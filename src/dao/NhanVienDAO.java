@@ -1,5 +1,4 @@
 package dao;
-<<<<<<< Updated upstream
 
 import model.NhanVien;
 import util.DBConnection;
@@ -8,19 +7,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-=======
-
 import model.NhanVien;
 import util.DBConnection;
-
 import java.sql.*;
->>>>>>> Stashed changes
 import java.util.ArrayList;
 import java.util.List;
 
 public class NhanVienDAO {
 
-<<<<<<< Updated upstream
     public List<NhanVien> getAll() {
         List<NhanVien> danhSachNhanVien = new ArrayList<>();
         String sql = "SELECT * FROM nhan_vien";
@@ -45,10 +39,8 @@ public class NhanVienDAO {
         }
 
         return danhSachNhanVien;
-=======
     public NhanVienDAO() {
         dbConnection = (DBConnection) DBConnection.getConnection();
->>>>>>> Stashed changes
     }
 
     public NhanVien getByMa(String maNhanVien) {
