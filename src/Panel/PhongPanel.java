@@ -5,7 +5,9 @@ package Panel;
 
     import javax.swing.*;
     import javax.swing.border.EmptyBorder;
+    import javax.swing.table.DefaultTableCellRenderer;
     import javax.swing.table.DefaultTableModel;
+    import javax.swing.table.JTableHeader;
     import java.awt.*;
     import java.awt.event.*;
     import java.util.HashMap;
@@ -111,6 +113,23 @@ package Panel;
             table.setSelectionBackground(PRIMARY_COLOR);
             table.setSelectionForeground(TEXT_COLOR);
             table.setGridColor(Color.LIGHT_GRAY);
+
+            JTableHeader header = table.getTableHeader();
+            header.setDefaultRenderer(new DefaultTableCellRenderer() {
+                @Override
+                public Component getTableCellRendererComponent(JTable table, Object value,
+                                                               boolean isSelected, boolean hasFocus,
+                                                               int row, int column) {
+                    JLabel label = (JLabel) super.getTableCellRendererComponent(
+                            table, value, isSelected, hasFocus, row, column);
+                    label.setBackground(PRIMARY_COLOR);
+                    label.setForeground(TEXT_COLOR);
+                    label.setFont(LABEL_FONT);
+                    label.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 1, Color.LIGHT_GRAY));
+                    label.setHorizontalAlignment(JLabel.CENTER);
+                    return label;
+                }
+            });
             // Set header style
             table.getTableHeader().setBackground(PRIMARY_COLOR);
             table.getTableHeader().setFont(LABEL_FONT);

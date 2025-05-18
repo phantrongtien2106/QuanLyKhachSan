@@ -9,13 +9,13 @@ import java.util.List;
 
 public class HoaDonDAO {
 
-    public boolean insert(HoaDon hd) {
-        String sql = "INSERT INTO hoa_don (id, ngay_nhan_phong, ngay_tra_phong, ngay_thanh_toan, tong_tien, phuong_thuc_thanh_toan, trang_thai, ma_phieu, ma_hop_dong) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+public boolean insert(HoaDon hd) {
+        String sql = "INSERT INTO hoa_don (id, ngay_nhan, ngay_tra, ngay_thanh_toan, tong_tien, phuong_thuc_thanh_toan, trang_thai, ma_phieu, ma_hop_dong) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, hd.getId());
-            stmt.setString(2, hd.getNgayNhanPhong());
-            stmt.setString(3, hd.getNgayTraPhong());
+            stmt.setString(2, hd.getNgayNhan());         // Changed from getNgayNhanPhong()
+            stmt.setString(3, hd.getNgayTra());          // Changed from getNgayTraPhong()
             stmt.setString(4, hd.getNgayThanhToan());
             stmt.setDouble(5, hd.getTongTien());
             stmt.setString(6, hd.getPhuongThucThanhToan());
@@ -28,13 +28,12 @@ public class HoaDonDAO {
             return false;
         }
     }
-
     public boolean update(HoaDon hd) {
-        String sql = "UPDATE hoa_don SET ngay_nhan_phong=?, ngay_tra_phong=?, ngay_thanh_toan=?, tong_tien=?, phuong_thuc_thanh_toan=?, trang_thai=?, ma_phieu=?, ma_hop_dong=? WHERE id=?";
+        String sql = "UPDATE hoa_don SET ngay_nhan=?, ngay_tra=?, ngay_thanh_toan=?, tong_tien=?, phuong_thuc_thanh_toan=?, trang_thai=?, ma_phieu=?, ma_hop_dong=? WHERE id=?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, hd.getNgayNhanPhong());
-            stmt.setString(2, hd.getNgayTraPhong());
+            stmt.setString(1, hd.getNgayNhan());
+            stmt.setString(2, hd.getNgayTra());
             stmt.setString(3, hd.getNgayThanhToan());
             stmt.setDouble(4, hd.getTongTien());
             stmt.setString(5, hd.getPhuongThucThanhToan());
@@ -97,8 +96,8 @@ public class HoaDonDAO {
             while (rs.next()) {
                 HoaDon hd = new HoaDon(
                         rs.getString("id"),
-                        rs.getString("ngay_nhan_phong"),
-                        rs.getString("ngay_tra_phong"),
+                        rs.getString("ngay_nhan"),
+                        rs.getString("ngay_tra"),
                         rs.getString("ngay_thanh_toan"),
                         rs.getDouble("tong_tien"),
                         rs.getString("phuong_thuc_thanh_toan"),
@@ -123,8 +122,8 @@ public class HoaDonDAO {
             if (rs.next()) {
                 return new HoaDon(
                         rs.getString("id"),
-                        rs.getString("ngay_nhan_phong"),
-                        rs.getString("ngay_tra_phong"),
+                        rs.getString("ngay_nhan"),
+                        rs.getString("ngay_tra"),
                         rs.getString("ngay_thanh_toan"),
                         rs.getDouble("tong_tien"),
                         rs.getString("phuong_thuc_thanh_toan"),
@@ -148,8 +147,8 @@ public class HoaDonDAO {
             if (rs.next()) {
                 return new HoaDon(
                         rs.getString("id"),
-                        rs.getString("ngay_nhan_phong"),
-                        rs.getString("ngay_tra_phong"),
+                        rs.getString("ngay_nhang"),
+                        rs.getString("ngay_tra"),
                         rs.getString("ngay_thanh_toan"),
                         rs.getDouble("tong_tien"),
                         rs.getString("phuong_thuc_thanh_toan"),
@@ -173,8 +172,8 @@ public class HoaDonDAO {
             if (rs.next()) {
                 return new HoaDon(
                         rs.getString("id"),
-                        rs.getString("ngay_nhan_phong"),
-                        rs.getString("ngay_tra_phong"),
+                        rs.getString("ngay_nhan"),
+                        rs.getString("ngay_tra"),
                         rs.getString("ngay_thanh_toan"),
                         rs.getDouble("tong_tien"),
                         rs.getString("phuong_thuc_thanh_toan"),
@@ -199,8 +198,8 @@ public class HoaDonDAO {
             while (rs.next()) {
                 HoaDon hd = new HoaDon(
                         rs.getString("id"),
-                        rs.getString("ngay_nhan_phong"),
-                        rs.getString("ngay_tra_phong"),
+                        rs.getString("ngay_nhan"),
+                        rs.getString("ngay_tra"),
                         rs.getString("ngay_thanh_toan"),
                         rs.getDouble("tong_tien"),
                         rs.getString("phuong_thuc_thanh_toan"),
@@ -227,8 +226,8 @@ public class HoaDonDAO {
             while (rs.next()) {
                 HoaDon hd = new HoaDon(
                         rs.getString("id"),
-                        rs.getString("ngay_nhan_phong"),
-                        rs.getString("ngay_tra_phong"),
+                        rs.getString("ngay_nhan"),
+                        rs.getString("ngay_tra"),
                         rs.getString("ngay_thanh_toan"),
                         rs.getDouble("tong_tien"),
                         rs.getString("phuong_thuc_thanh_toan"),
